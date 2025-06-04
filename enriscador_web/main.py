@@ -1,62 +1,63 @@
 import argparse
-import subprocess
 import os
 import shutil
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
-def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None):
-    """Download site using wget."""
-    cmd = [
-        "wget",
-        "--mirror",             # recursive download
-        "--convert-links",      # convert links for offline use
-        "--page-requisites",    # download all assets
-        "--adjust-extension",
-        "--no-parent",
-    ]
-    if depth:
-        cmd += ["--level", str(depth)]
+from pywebcopy import configs
+
+
+def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
+    """Download site using pywebcopy and generate theme files."""
+    dest_dir = Path(dest_dir).resolve()
+    static_dir = dest_dir / "static"
+    static_dir.mkdir(parents=True, exist_ok=True)
+
+    # Configure pywebcopy
+    conf = configs.get_config(url, str(static_dir), "", bypass_robots=True)
     if user_agent:
-        cmd += ["--user-agent", user_agent]
-    if exclude:
-        cmd += ["--exclude-domains", ",".join(exclude)]
-    cmd += ["-P", str(dest_dir), url]
+        headers = conf["http_headers"]
+        headers["User-Agent"] = user_agent
+        conf["http_headers"] = headers
 
-    print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
+    crawler = conf.create_crawler()
+    crawler.get(url)
+    crawler.save_complete()
+
+    host = urlparse(url).hostname or "site"
+    src_root = Path(conf.get_project_folder()) / host
+    if src_root.exists():
+        for item in src_root.iterdir():
+            target = static_dir / item.name
+            if target.exists():
+                if item.is_dir():
+                    shutil.rmtree(target)
+                else:
+                    target.unlink()
+            shutil.move(str(item), target)
+        shutil.rmtree(Path(conf.get_project_folder()))
+
+    tn = theme_name or Path(dest_dir).name
+    copy_template_files(dest_dir, tn, url)
 
 
-def copy_template_files(theme_dir):
-    """Copy base PHP template files into the theme."""
-    template_dir = Path(__file__).parent / "templates" / "theme"
+def copy_template_files(theme_dir, theme_name, url=""):
+    """Copy base PHP template files and style.css into the theme."""
+    template_dir = Path(__file__).parent / "theme_template"
     for fname in os.listdir(template_dir):
-        shutil.copy(template_dir / fname, theme_dir)
+        src = template_dir / fname
+        dst = theme_dir / fname
+        if fname == "style.css":
+            text = src.read_text()
+            text = text.replace("{{THEME_NAME}}", theme_name)
+            text = text.replace("{{URL}}", url)
+            dst.write_text(text)
+        else:
+            shutil.copy(src, dst)
 
 
-def create_wp_theme(theme_name, source_dir, output_dir, url=""):
-    """Create WordPress theme from downloaded site."""
-    theme_dir = Path(output_dir)
-    site_dir = theme_dir / "site"
-    if theme_dir.exists():
-        shutil.rmtree(theme_dir)
-    shutil.copytree(source_dir, site_dir)
-
-    copy_template_files(theme_dir)
-
-    style_css = f"""/*
-Theme Name: {theme_name}
-Description: Static site generated from {url}
-Version: 1.0
-*/
-"""
-    with open(theme_dir / "style.css", "w") as fh:
-        fh.write(style_css)
-
-    print(f"WordPress theme created at {theme_dir}")
-
-
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description="Enriscador Web - Convert websites into static WordPress themes"
     )
@@ -68,36 +69,53 @@ def parse_args():
     dl.add_argument("--user-agent", default=None, help="Custom User-Agent")
     dl.add_argument("--depth", type=int, help="Maximum crawl depth")
     dl.add_argument("--exclude", nargs="*", help="Domains to exclude")
-
-    pkg = sub.add_parser("package", help="Create WordPress theme from download")
-    pkg.add_argument("source", help="Directory with the downloaded site")
-    pkg.add_argument(
-        "output",
-        help="Directory where the WordPress theme will be generated (e.g. themes/mytheme)",
+    dl.add_argument(
+        "--sanitize",
+        action="store_true",
+        help="Sanitize file names (no effect when using pywebcopy)",
     )
-    pkg.add_argument("--theme-name", default=None, help="Name of the WordPress theme")
-    pkg.add_argument("--url", help="Original site URL", default="")
+    dl.add_argument("--theme-name", help="Name for the generated theme")
 
-    return parser.parse_args()
+    pkg = sub.add_parser("package", help="Compress a downloaded theme directory")
+    pkg.add_argument("path", help="Directory with the theme ready to zip")
+    pkg.add_argument(
+        "--output",
+        help="Path to the resulting ZIP (defaults to <path>.zip)",
+        default=None,
+    )
+
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    # If called without subcommand, default to 'download'
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and not argv[0].startswith('-') and argv[0] not in {'download', 'package'}:
+        argv = ['download'] + argv
+    args = parse_args(argv)
 
     if args.command == "download":
         try:
-            download_site(args.url, Path(args.output), args.user_agent, args.depth, args.exclude)
-        except subprocess.CalledProcessError as e:
+            download_site(
+                args.url,
+                Path(args.output),
+                args.user_agent,
+                args.depth,
+                args.exclude,
+                sanitize=args.sanitize,
+                theme_name=args.theme_name,
+            )
+        except Exception as e:
             print("Error during download", e)
             sys.exit(1)
         return
 
     if args.command == "package":
-        theme_name = args.theme_name or Path(args.output).name
-        create_wp_theme(theme_name, args.source, args.output, args.url)
-        zip_path = shutil.make_archive(args.output, "zip", args.output)
+        target = Path(args.path)
+        zip_out = Path(args.output) if args.output else target.with_suffix(".zip")
+        zip_path = shutil.make_archive(str(zip_out.with_suffix("")), "zip", target)
         print(f"Theme archived at {zip_path}")
-
 
 
 if __name__ == "__main__":
