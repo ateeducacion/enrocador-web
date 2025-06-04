@@ -63,12 +63,12 @@ def copy_template_files(theme_dir, theme_name, url=""):
 
 
 def capture_screenshot(url, theme_dir):
-    """Generate screenshot.png for the theme using html2image."""
+    """Generate ``screenshot.png`` for the theme using html2image."""
     try:
-        hti = Html2Image()
         output_dir = Path(theme_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        hti.screenshot(url=url, save_as="screenshot.png", output_path=str(output_dir))
+        hti = Html2Image(output_path=str(output_dir))
+        hti.screenshot(url=url, save_as="screenshot.png")
     except Exception as e:
         print(f"Could not capture screenshot: {e}")
 
