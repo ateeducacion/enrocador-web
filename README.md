@@ -7,9 +7,11 @@ Herramienta para convertir un sitio web en un tema de WordPress estático.
 - Python 3.8+
 - `wget` instalado en el sistema
 
-Instala las dependencias de Python:
+Crea un entorno virtual e instala las dependencias:
 
 ```bash
+python3 -m venv env
+source env/bin/activate
 pip install -r requirements.txt
 ```
 
