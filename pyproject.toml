@@ -3,5 +3,6 @@ name = "enriscador-web"
 version = "0.1.0"
 requires-python = ">=3.8, <3.13"
 dependencies = [
-    "pywebcopy"
+    "pywebcopy",
+    "html2image"
 ]

@@ -10,6 +10,20 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from pywebcopy import configs
+from html2image import Html2Image
+import threading
+import time
+
+
+def _spinner(message, stop_event):
+    """Simple CLI spinner shown while stop_event isn't set."""
+    chars = ['|', '/', '-', '\\']
+    idx = 0
+    while not stop_event.is_set():
+        print(f"\r{message} {chars[idx % len(chars)]}", end='', flush=True)
+        time.sleep(0.1)
+        idx += 1
+    print(f"\r{message} listo.      ")
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
@@ -25,8 +39,15 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
         conf["http_headers"] = headers
 
     crawler = conf.create_crawler()
-    crawler.get(url)
-    crawler.save_complete()
+    stop = threading.Event()
+    t = threading.Thread(target=_spinner, args=('Descargando...', stop))
+    t.start()
+    try:
+        crawler.get(url)
+        crawler.save_complete()
+    finally:
+        stop.set()
+        t.join()
 
     host = urlparse(url).hostname or "site"
     src_root = Path(conf.get_project_folder()) / host
@@ -43,6 +64,8 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
 
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
+    convert_html_to_utf8(static_dir)
+    capture_screenshot(url, dest_dir)
 
 
 def copy_template_files(theme_dir, theme_name, url=""):
@@ -58,6 +81,32 @@ def copy_template_files(theme_dir, theme_name, url=""):
             dst.write_text(text)
         else:
             shutil.copy(src, dst)
+
+
+def convert_html_to_utf8(root_dir):
+    """Re-encode all HTML files inside ``root_dir`` to UTF-8."""
+    for path in Path(root_dir).rglob('*.htm*'):
+        data = path.read_bytes()
+        for enc in ('utf-8', 'latin-1'):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        else:
+            text = data.decode('utf-8', errors='replace')
+        path.write_text(text, encoding='utf-8')
+
+
+def capture_screenshot(url, theme_dir):
+    """Generate ``screenshot.png`` for the theme using html2image."""
+    try:
+        output_dir = Path(theme_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        hti = Html2Image(output_path=str(output_dir))
+        hti.screenshot(url=url, save_as="screenshot.png")
+    except Exception as e:
+        print(f"Could not capture screenshot: {e}")
 
 
 def parse_args(argv=None):
