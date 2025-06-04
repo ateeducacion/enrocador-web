@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from pywebcopy import configs
+from html2image import Html2Image
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
@@ -43,6 +44,7 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
 
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
+    capture_screenshot(url, dest_dir)
 
 
 def copy_template_files(theme_dir, theme_name, url=""):
@@ -58,6 +60,17 @@ def copy_template_files(theme_dir, theme_name, url=""):
             dst.write_text(text)
         else:
             shutil.copy(src, dst)
+
+
+def capture_screenshot(url, theme_dir):
+    """Generate screenshot.png for the theme using html2image."""
+    try:
+        hti = Html2Image()
+        output_dir = Path(theme_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        hti.screenshot(url=url, save_as="screenshot.png", output_path=str(output_dir))
+    except Exception as e:
+        print(f"Could not capture screenshot: {e}")
 
 
 def parse_args(argv=None):

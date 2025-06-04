@@ -1,2 +1,3 @@
 requests
 pywebcopy==7.1
+html2image

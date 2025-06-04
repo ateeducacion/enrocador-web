@@ -5,7 +5,7 @@ Herramienta para convertir un sitio web en un tema de WordPress estático.
 ## Requisitos
 
 - Python 3.8+
-- La librería `pywebcopy` incluida en `requirements.txt`
+- Las librerías `pywebcopy` y `html2image` incluidas en `requirements.txt`
 
 Crea un entorno virtual e instala las dependencias:
 
@@ -26,6 +26,8 @@ mostrará el contenido de `static/index.html` si existe y devolverá un 404 en c
 `template_redirect`, comprueba si la ruta solicitada existe dentro de la
 carpeta `static` del tema. En tal caso envía el archivo correspondiente
 para que los recursos descargados funcionen con sus URLs originales.
+Además se crea automáticamente un `screenshot.png` usando la librería
+`html2image` para que WordPress muestre una vista previa del tema.
 
 ### Descargar un sitio
 
