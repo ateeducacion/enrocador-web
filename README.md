@@ -28,6 +28,8 @@ carpeta `static` del tema sin modificar las URLs.
 Si se trata de un HTML se inyecta una etiqueta `<base>` que apunta a esa carpeta,
 por lo que las rutas relativas de estilos, imágenes o scripts funcionan correctamente.
 El router también envía la cabecera `charset=UTF-8` para evitar caracteres extraños.
+Durante la descarga los archivos HTML se recodifican a UTF-8 para que el texto
+se muestre correctamente sin importar el charset original.
 Además se crea automáticamente un `screenshot.png` usando la librería
 `html2image` para que WordPress muestre una vista previa del tema.
 

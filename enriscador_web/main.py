@@ -44,6 +44,7 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
 
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
+    convert_html_to_utf8(static_dir)
     capture_screenshot(url, dest_dir)
 
 
@@ -60,6 +61,21 @@ def copy_template_files(theme_dir, theme_name, url=""):
             dst.write_text(text)
         else:
             shutil.copy(src, dst)
+
+
+def convert_html_to_utf8(root_dir):
+    """Re-encode all HTML files inside ``root_dir`` to UTF-8."""
+    for path in Path(root_dir).rglob('*.htm*'):
+        data = path.read_bytes()
+        for enc in ('utf-8', 'latin-1'):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        else:
+            text = data.decode('utf-8', errors='replace')
+        path.write_text(text, encoding='utf-8')
 
 
 def capture_screenshot(url, theme_dir):
