@@ -5,7 +5,7 @@ Herramienta para convertir un sitio web en un tema de WordPress estático.
 ## Requisitos
 
 - Python 3.8+
-- `wget` instalado en el sistema
+- La librería `pywebcopy` incluida en `requirements.txt`
 
 Crea un entorno virtual e instala las dependencias:
 
@@ -37,9 +37,7 @@ Opciones de descarga:
 - `--depth` Profundidad máxima de crawling.
 - `--exclude` Lista de dominios a excluir.
 - `--theme-name` Nombre del tema generado.
-- `--sanitize` Aplica `--restrict-file-names=windows` para sanear nombres de archivos.
-- Si `wget` finaliza con el código `8` debido a recursos que devuelven
-  `404`, el proceso continúa y se copian igualmente los ficheros del tema.
+- `--sanitize` opcional para sanear nombres de archivos (actualmente sin efecto con `pywebcopy`).
 
 ### Empaquetar la carpeta descargada
 

@@ -1,46 +1,42 @@
 import argparse
-import subprocess
 import os
 import shutil
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+from pywebcopy import configs
+
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
-    """Download site using wget."""
+    """Download site using pywebcopy and generate theme files."""
     dest_dir = Path(dest_dir).resolve()
     static_dir = dest_dir / "static"
     static_dir.mkdir(parents=True, exist_ok=True)
 
-    parsed = urlparse(url)
-    segments = [s for s in parsed.path.split("/") if s]
-
-    cmd = [
-        "wget",
-        "--mirror",             # recursive download
-        "--convert-links",      # convert links for offline use
-        "--page-requisites",    # download all assets
-        "--adjust-extension",
-        "--no-parent",
-        "--no-host-directories",
-    ]
-    if segments:
-        cmd += ["--cut-dirs", str(len(segments))]
-    if depth:
-        cmd += ["--level", str(depth)]
+    # Configure pywebcopy
+    conf = configs.get_config(url, str(static_dir), "", bypass_robots=True)
     if user_agent:
-        cmd += ["--user-agent", user_agent]
-    if exclude:
-        cmd += ["--exclude-domains", ",".join(exclude)]
-    if sanitize:
-        cmd += ["--restrict-file-names=windows"]
-    cmd += ["-P", str(static_dir), url]
+        headers = conf["http_headers"]
+        headers["User-Agent"] = user_agent
+        conf["http_headers"] = headers
 
-    print("Running:", " ".join(cmd))
-    result = subprocess.run(cmd)
-    if result.returncode not in (0, 8):
-        result.check_returncode()
+    crawler = conf.create_crawler()
+    crawler.get(url)
+    crawler.save_complete()
+
+    host = urlparse(url).hostname or "site"
+    src_root = Path(conf.get_project_folder()) / host
+    if src_root.exists():
+        for item in src_root.iterdir():
+            target = static_dir / item.name
+            if target.exists():
+                if item.is_dir():
+                    shutil.rmtree(target)
+                else:
+                    target.unlink()
+            shutil.move(str(item), target)
+        shutil.rmtree(Path(conf.get_project_folder()))
 
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
@@ -76,7 +72,7 @@ def parse_args(argv=None):
     dl.add_argument(
         "--sanitize",
         action="store_true",
-        help="Sanitize file names (adds --restrict-file-names=windows)",
+        help="Sanitize file names (no effect when using pywebcopy)",
     )
     dl.add_argument("--theme-name", help="Name for the generated theme")
 
@@ -110,7 +106,7 @@ def main(argv=None):
                 sanitize=args.sanitize,
                 theme_name=args.theme_name,
             )
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             print("Error during download", e)
             sys.exit(1)
         return
