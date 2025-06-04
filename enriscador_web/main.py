@@ -5,7 +5,6 @@ import shutil
 import sys
 from pathlib import Path
 
-
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None):
     """Download site using wget."""
     cmd = [
@@ -98,6 +97,7 @@ def main():
         create_wp_theme(theme_name, args.source, args.output, args.url)
         zip_path = shutil.make_archive(args.output, "zip", args.output)
         print(f"Theme archived at {zip_path}")
+
 
 
 if __name__ == "__main__":
