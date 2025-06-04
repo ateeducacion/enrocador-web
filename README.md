@@ -24,8 +24,9 @@ WordPress (`index.php`, `style.css` y `functions.php`). El `index.php`
 mostrará el contenido de `static/index.html` si existe y devolverá un 404 en caso contrario.
 `functions.php` incorpora un pequeño router que, durante
 `template_redirect`, comprueba si la ruta solicitada existe dentro de la
-carpeta `static` del tema. En tal caso envía el archivo correspondiente
-para que los recursos descargados funcionen con sus URLs originales.
+carpeta `static` del tema. Si es un archivo HTML, reescribe las rutas de
+los recursos para apuntar a esa carpeta. Así los estilos, imágenes y
+scripts descargados funcionan con sus URLs originales.
 Además se crea automáticamente un `screenshot.png` usando la librería
 `html2image` para que WordPress muestre una vista previa del tema.
 

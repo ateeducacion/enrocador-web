@@ -4,6 +4,27 @@
  */
 
 /**
+ * Replace root-relative asset URLs in HTML so they point to this theme's
+ * `static` directory.
+ */
+function enriscador_filter_static_html($html) {
+    $base = content_url('themes/' . get_stylesheet() . '/static');
+    $domain = parse_url(home_url(), PHP_URL_HOST);
+    $html = preg_replace('#https?://' . preg_quote($domain, '#') . '/#', '/', $html);
+    $html = preg_replace(
+        '#(src|href)="/(?!wp-content/|wp-includes/)([^"\s]+)"#',
+        '$1="' . $base . '/$2"',
+        $html
+    );
+    $html = preg_replace(
+        '#url\(/(?!wp-content/|wp-includes/)([^)]+)\)#',
+        'url(' . $base . '/$1)',
+        $html
+    );
+    return $html;
+}
+
+/**
  * Serve static assets stored in the theme's `static` folder.
  *
  * Requests to paths like `/style.css` or `/images/foo.png` will be
@@ -30,7 +51,11 @@ function enriscador_static_router() {
         if (isset($types[$ext]) && !headers_sent()) {
             header('Content-Type: ' . $types[$ext]);
         }
-        readfile($file);
+        if (in_array($ext, array('html', 'htm'))) {
+            echo enriscador_filter_static_html(file_get_contents($file));
+        } else {
+            readfile($file);
+        }
         exit;
     }
 }
