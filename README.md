@@ -73,6 +73,9 @@ python -m enriscador_web.main package downloads/archivado --output downloads/arc
 
 Para facilitar el flujo de trabajo se incluye un `Makefile` sencillo.
 
+- `make` o `make help` muestra las opciones disponibles.
+Al ejecutar `make` sin argumentos se mostrará esta misma ayuda.
+
 - `make download` descarga un sitio de forma interactiva en la carpeta `downloads`.
 - `make package` comprime cada carpeta de `downloads` en un archivo `.zip` con el mismo nombre.
 - `make up` y `make down` inician y detienen un entorno local de WordPress usando `wp-env`.
