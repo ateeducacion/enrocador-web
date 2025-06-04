@@ -1,3 +1,5 @@
 __pycache__/
 
 downloads/*.zip
+env/
+downloads
