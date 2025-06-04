@@ -16,7 +16,10 @@ pip install -r requirements.txt
 ## Uso básico
 
 Enriscador Web se organiza en dos subcomandos. Si no se especifica ninguno,
-se asume `download` por defecto:
+se asume `download` por defecto. El sitio descargado se guarda dentro de una
+carpeta `static` y en la raíz se copian los ficheros mínimos de un tema de
+WordPress (`index.php`, `style.css` y `functions.php`). El `index.php`
+mostrará el contenido de `static/index.html`:
 
 ### Descargar un sitio
 

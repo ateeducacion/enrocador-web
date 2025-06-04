@@ -4,12 +4,17 @@ import os
 import shutil
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using wget."""
     dest_dir = Path(dest_dir).resolve()
-    dest_dir.mkdir(parents=True, exist_ok=True)
+    static_dir = dest_dir / "static"
+    static_dir.mkdir(parents=True, exist_ok=True)
+
+    parsed = urlparse(url)
+    segments = [s for s in parsed.path.split("/") if s]
 
     cmd = [
         "wget",
@@ -20,6 +25,8 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
         "--no-parent",
         "--no-host-directories",
     ]
+    if segments:
+        cmd += ["--cut-dirs", str(len(segments))]
     if depth:
         cmd += ["--level", str(depth)]
     if user_agent:
@@ -28,10 +35,11 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
         cmd += ["--exclude-domains", ",".join(exclude)]
     if sanitize:
         cmd += ["--restrict-file-names=windows"]
-    cmd += ["-P", str(dest_dir), url]
+    cmd += ["-P", str(static_dir), url]
 
     print("Running:", " ".join(cmd))
     subprocess.run(cmd, check=True)
+
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
 
