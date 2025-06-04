@@ -8,19 +8,31 @@
  * `static` directory.
  */
 function enriscador_filter_static_html($html) {
-    $base = content_url('themes/' . get_stylesheet() . '/static');
+    $base = trailingslashit(content_url('themes/' . get_stylesheet() . '/static'));
     $domain = parse_url(home_url(), PHP_URL_HOST);
-    $html = preg_replace('#https?://' . preg_quote($domain, '#') . '/#', '/', $html);
+
+    // Convert absolute URLs of this site to relative paths
+    $html = preg_replace('#https?://' . preg_quote($domain, '#') . '/#i', '', $html);
+
+    // Make root-relative references relative so <base> works
     $html = preg_replace(
-        '#(src|href)="/(?!wp-content/|wp-includes/)([^"\s]+)"#',
-        '$1="' . $base . '/$2"',
+        '#(src|href)="/(?!wp-content/|wp-includes/)([^"\s]+)"#i',
+        '$1="$2"',
         $html
     );
     $html = preg_replace(
-        '#url\(/(?!wp-content/|wp-includes/)([^)]+)\)#',
-        'url(' . $base . '/$1)',
+        '#url\(/(?!wp-content/|wp-includes/)([^)]+)\)#i',
+        'url($1)',
         $html
     );
+
+    // Insert or replace <base> so resources resolve to the static folder
+    if (preg_match('#<base[^>]*>#i', $html)) {
+        $html = preg_replace('#<base[^>]*>#i', '<base href="' . $base . '">', $html, 1);
+    } elseif (preg_match('#<head[^>]*>#i', $html)) {
+        $html = preg_replace('#<head([^>]*)>#i', '<head$1><base href="' . $base . '">', $html, 1);
+    }
+
     return $html;
 }
 
