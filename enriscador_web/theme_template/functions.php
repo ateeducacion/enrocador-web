@@ -13,6 +13,10 @@ function enriscador_static_router() {
     $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $path = ltrim($path, '/');
 
+    if ($path === '') {
+        $path = 'index.html';
+    }
+
     $file = get_template_directory() . '/static/' . $path;
     if (file_exists($file) && !is_dir($file)) {
         $mime = mime_content_type($file);
