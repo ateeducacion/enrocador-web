@@ -1,7 +1,6 @@
 # Simplified Makefile for Enriscador Web
 
 THEMES_DIR := themes
-DOWNLOADS_DIR := downloads
 
 .PHONY: up down download package
 
@@ -13,16 +12,16 @@ up:
 down:
 	npx wp-env stop
 
-# Interactive download of a site into $(DOWNLOADS_DIR)
+# Interactive download of a site into $(THEMES_DIR)
 download:
-	@read -p "Site URL: " URL; \
-	read -p "Folder name: " NAME; \
-	mkdir -p $(DOWNLOADS_DIR)/$$NAME; \
-	python -m enriscador_web.main download $$URL $(DOWNLOADS_DIR)/$$NAME --theme-name $$NAME
+    @read -p "Site URL: " URL; \
+    read -p "Folder name: " NAME; \
+    mkdir -p $(THEMES_DIR)/$$NAME; \
+    python -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
 
-# Package all downloads in $(DOWNLOADS_DIR) into themes under $(THEMES_DIR)
+# Package all themes in $(THEMES_DIR) into zip files
 package:
-	@for d in $(DOWNLOADS_DIR)/*; do \
-		[ -d "$$d" ] || continue; \
-		python -m enriscador_web.main package "$$d" --output "$$d.zip"; \
-	done
+    @for d in $(THEMES_DIR)/*; do \
+            [ -d "$$d" ] || continue; \
+            python -m enriscador_web.main package "$$d" --output "$$d.zip"; \
+    done

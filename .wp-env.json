@@ -2,6 +2,9 @@
     "plugins": [
         "https://downloads.wordpress.org/plugin/wp-mail-logging.zip"
     ],
+    "themes": [
+        "https://downloads.wordpress.org/theme/twentytwentyfive.zip"
+    ],
     "mappings": {
         "wp-content/themes/": "./themes/"
     }

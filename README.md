@@ -51,19 +51,20 @@ Ejemplo completo:
 
 ```bash
 # Descargar el sitio (equivalente a usar el subcomando `download`)
-python -m enriscador_web.main https://ejemplo.com downloads/archivado --theme-name MiTema --depth 1
+python -m enriscador_web.main https://ejemplo.com themes/archivado --theme-name MiTema --depth 1
 
 # Comprimir para distribuir
-python -m enriscador_web.main package downloads/archivado --output downloads/archivado.zip
+python -m enriscador_web.main package themes/archivado --output themes/archivado.zip
 ```
 
 ## Uso con Makefile
 
 Para facilitar el flujo de trabajo se incluye un `Makefile` sencillo.
 
-- `make download` descarga un sitio de forma interactiva en la carpeta `downloads`.
-- `make package` comprime cada carpeta de `downloads` en un archivo `.zip` con el mismo nombre.
+- `make download` descarga un sitio de forma interactiva en la carpeta `themes`.
+- `make package` comprime cada carpeta de `themes` en un archivo `.zip` con el mismo nombre.
 - `make up` y `make down` inician y detienen un entorno local de WordPress usando `wp-env`.
 
 Con `.wp-env.json` se mapea la carpeta `themes/` a `wp-content/themes/`, por lo que puedes copiar los temas allí para probarlos ejecutando `make up`.
+El archivo también descarga automáticamente el tema oficial "twentytwentyfive" para que siga disponible junto con tus temas generados.
 
