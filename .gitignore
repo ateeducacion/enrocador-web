@@ -1,0 +1,5 @@
+__pycache__/
+
+downloads/**/*.zip
+downloads/*.zip
+themes/*.zip
