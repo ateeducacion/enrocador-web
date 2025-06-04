@@ -32,6 +32,8 @@ Durante la descarga los archivos HTML se recodifican a UTF-8 para que el texto
 se muestre correctamente sin importar el charset original.
 Además se crea automáticamente un `screenshot.png` usando la librería
 `html2image` para que WordPress muestre una vista previa del tema.
+Mientras PyWebCopy trabaja se muestra un pequeño mensaje "Descargando..." en la
+consola para indicar que el proceso sigue en curso.
 
 ### Descargar un sitio
 

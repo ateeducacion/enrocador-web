@@ -11,6 +11,19 @@ from urllib.parse import urlparse
 
 from pywebcopy import configs
 from html2image import Html2Image
+import threading
+import time
+
+
+def _spinner(message, stop_event):
+    """Simple CLI spinner shown while stop_event isn't set."""
+    chars = ['|', '/', '-', '\\']
+    idx = 0
+    while not stop_event.is_set():
+        print(f"\r{message} {chars[idx % len(chars)]}", end='', flush=True)
+        time.sleep(0.1)
+        idx += 1
+    print(f"\r{message} listo.      ")
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
@@ -26,8 +39,15 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
         conf["http_headers"] = headers
 
     crawler = conf.create_crawler()
-    crawler.get(url)
-    crawler.save_complete()
+    stop = threading.Event()
+    t = threading.Thread(target=_spinner, args=('Descargando...', stop))
+    t.start()
+    try:
+        crawler.get(url)
+        crawler.save_complete()
+    finally:
+        stop.set()
+        t.join()
 
     host = urlparse(url).hostname or "site"
     src_root = Path(conf.get_project_folder()) / host
