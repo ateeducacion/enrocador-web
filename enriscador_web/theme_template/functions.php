@@ -61,7 +61,11 @@ function enriscador_static_router() {
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         $types = wp_get_mime_types();
         if (isset($types[$ext]) && !headers_sent()) {
-            header('Content-Type: ' . $types[$ext]);
+            $type = $types[$ext];
+            if (in_array($ext, array('html', 'htm'))) {
+                $type .= '; charset=UTF-8';
+            }
+            header('Content-Type: ' . $type);
         }
         if (in_array($ext, array('html', 'htm'))) {
             echo enriscador_filter_static_html(file_get_contents($file));
