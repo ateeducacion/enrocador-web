@@ -57,6 +57,12 @@ function enriscador_static_router() {
     }
 
     $file = get_stylesheet_directory() . '/static/' . $path;
+    if (!is_file($file)) {
+        $index = rtrim($file, '/') . '/index.html';
+        if (is_file($index)) {
+            $file = $index;
+        }
+    }
     if (is_file($file)) {
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         $types = wp_get_mime_types();

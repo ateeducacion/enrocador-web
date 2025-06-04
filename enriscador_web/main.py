@@ -52,7 +52,13 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
     host = urlparse(url).hostname or "site"
     src_root = Path(conf.get_project_folder()) / host
     if src_root.exists():
-        for item in src_root.iterdir():
+        parts = [p for p in Path(urlparse(url).path).parts if p not in ('', '/')]
+        source = src_root
+        if parts:
+            candidate = src_root.joinpath(*parts)
+            if candidate.exists():
+                source = candidate
+        for item in source.iterdir():
             target = static_dir / item.name
             if target.exists():
                 if item.is_dir():
@@ -65,6 +71,7 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
     convert_html_to_utf8(static_dir)
+    strip_index_from_urls(static_dir)
     capture_screenshot(url, dest_dir)
 
 
@@ -96,6 +103,26 @@ def convert_html_to_utf8(root_dir):
         else:
             text = data.decode('utf-8', errors='replace')
         path.write_text(text, encoding='utf-8')
+
+
+def strip_index_from_urls(root_dir):
+    """Remove 'index.html' from href/src attributes in HTML files."""
+    import re
+    pattern = re.compile(r'(href|src)=(\"|\')(.*?)/?index\.html(?=[\"\'])', re.IGNORECASE)
+    for path in Path(root_dir).rglob('*.htm*'):
+        text = path.read_text(encoding='utf-8')
+
+        def repl(match):
+            url = match.group(3)
+            if url and not url.endswith('/'):
+                url += '/'
+            elif url == '':
+                url = './'
+            return f"{match.group(1)}={match.group(2)}{url}"
+
+        new_text = pattern.sub(repl, text)
+        if new_text != text:
+            path.write_text(new_text, encoding='utf-8')
 
 
 def capture_screenshot(url, theme_dir):
