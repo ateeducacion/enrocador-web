@@ -1,8 +1,25 @@
-# Simplified Makefile for Enriscador Web
+						# Simplified Makefile for Enriscador Web
+
+# Default target shows the list of available commands
+.DEFAULT_GOAL := help
 
 THEMES_DIR := downloads
 
-.PHONY: up down download package clean destroy check-plugin
+.PHONY: help up down download package clean destroy check-plugin install
+VENV_DIR ?= env
+
+# Show available targets
+help:
+	@echo "Available targets:"
+	@echo "  help            Show this help message"
+	@echo "  up              Start the local WordPress environment using wp-env"
+	@echo "  down            Stop the environment"
+	@echo "  download        Interactive download of a site into $(THEMES_DIR)"
+	@echo "  package         Create zip archives from each theme in $(THEMES_DIR)"
+	@echo "  clean           Remove wp-env environments"
+	@echo "  destroy         Remove all wp-env containers and volumes"
+	@echo "  check-plugin    Run plugin-check in the environment"
+	@echo "  install         Install Python and set up virtualenv"
 
 # Start the local WordPress environment using wp-env
 up:
@@ -39,3 +56,16 @@ destroy:
 check-plugin: up
 	npx wp-env run cli wp plugin install plugin-check --activate --color
 	npx wp-env run cli wp plugin check decker --exclude-directories=tests --exclude-checks=file_type,image_functions --ignore-warnings --color
+
+# Install Python (Windows) and create a virtual environment
+install:
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+	if ! command -v py >/dev/null 2>&1; then \
+	winget install -e --id Python.Python.3.12; \
+	fi; \
+	py -3.12 -m venv $(VENV_DIR) || py -3 -m venv $(VENV_DIR); \
+	$(VENV_DIR)\\Scripts\\pip install -r requirements.txt; \
+	else \
+	python3 -m venv $(VENV_DIR); \
+	$(VENV_DIR)/bin/pip install -r requirements.txt; \
+	fi
