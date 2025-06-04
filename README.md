@@ -36,6 +36,8 @@ Opciones de descarga:
 - `--exclude` Lista de dominios a excluir.
 - `--theme-name` Nombre del tema generado.
 - `--sanitize` Aplica `--restrict-file-names=windows` para sanear nombres de archivos.
+- Si `wget` finaliza con el código `8` debido a recursos que devuelven
+  `404`, el proceso continúa y se copian igualmente los ficheros del tema.
 
 ### Empaquetar la carpeta descargada
 

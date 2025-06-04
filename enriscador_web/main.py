@@ -38,7 +38,9 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
     cmd += ["-P", str(static_dir), url]
 
     print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
+    result = subprocess.run(cmd)
+    if result.returncode not in (0, 8):
+        result.check_returncode()
 
     tn = theme_name or Path(dest_dir).name
     copy_template_files(dest_dir, tn, url)
