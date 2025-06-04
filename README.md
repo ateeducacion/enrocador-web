@@ -22,10 +22,10 @@ se asume `download` por defecto. El sitio descargado se guarda dentro de una
 carpeta `static` y en la raíz se copian los ficheros mínimos de un tema de
 WordPress (`index.php`, `style.css` y `functions.php`). El `index.php`
 mostrará el contenido de `static/index.html` si existe y devolverá un 404 en caso contrario.
-El `functions.php` incluye un router muy básico que intercepta las
-peticiones a archivos inexistentes y los sirve desde la carpeta
-`static` del tema, por lo que los recursos pueden seguir referenciando
-sus rutas originales.
+`functions.php` incorpora un pequeño router que, durante
+`template_redirect`, comprueba si la ruta solicitada existe dentro de la
+carpeta `static` del tema. En tal caso envía el archivo correspondiente
+para que los recursos descargados funcionen con sus URLs originales.
 
 ### Descargar un sitio
 
