@@ -68,6 +68,9 @@ Para facilitar el flujo de trabajo se incluye un `Makefile` sencillo.
 - `make download` descarga un sitio de forma interactiva en la carpeta `downloads`.
 - `make package` comprime cada carpeta de `downloads` en un archivo `.zip` con el mismo nombre.
 - `make up` y `make down` inician y detienen un entorno local de WordPress usando `wp-env`.
+- `make clean` elimina los entornos generados por `wp-env`.
+- `make destroy` borra por completo los contenedores y volúmenes de `wp-env`.
+- `make check-plugin` ejecuta el plugin "plugin-check" dentro del entorno para validar el tema.
 
 Con `.wp-env.json` se mapea la carpeta `downloads/` a `wp-content/themes/`, por lo que puedes copiar los temas allí para probarlos ejecutando `make up`.
 El archivo también descarga automáticamente el tema oficial "twentytwentyfive" para que siga disponible junto con tus temas generados.
