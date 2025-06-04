@@ -1,0 +1,8 @@
+{
+    "plugins": [ 
+        "https://downloads.wordpress.org/plugin/wp-mail-logging.zip"
+    ],
+    "mappings": {
+        "wp-content/themes/": "./themes/"
+    }
+}
