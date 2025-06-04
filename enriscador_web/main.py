@@ -2,11 +2,14 @@ import argparse
 import os
 import shutil
 import sys
+
+if not (3, 8) <= sys.version_info < (3, 13):
+    sys.exit("ERROR: Enriscador Web requires Python >=3.8 and <3.13")
+
 from pathlib import Path
 from urllib.parse import urlparse
 
 from pywebcopy import configs
-
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
