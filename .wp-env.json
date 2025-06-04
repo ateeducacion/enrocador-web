@@ -6,6 +6,6 @@
         "https://downloads.wordpress.org/theme/twentytwentyfive.zip"
     ],
     "mappings": {
-        "wp-content/themes/": "./themes/"
+        "wp-content/themes/": "./downloads/"
     }
 }

@@ -1,6 +1,6 @@
 # Simplified Makefile for Enriscador Web
 
-THEMES_DIR := themes
+THEMES_DIR := downloads
 
 .PHONY: up down download package
 
