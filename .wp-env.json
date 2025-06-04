@@ -1,5 +1,5 @@
 {
-    "plugins": [ 
+    "plugins": [
         "https://downloads.wordpress.org/plugin/wp-mail-logging.zip"
     ],
     "mappings": {

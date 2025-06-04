@@ -1,4 +1,4 @@
-# Makefile
+# Simplified Makefile for Enriscador Web
 
 # Define SED_INPLACE based on the operating system
 ifeq ($(shell uname), Darwin)
@@ -6,6 +6,30 @@ ifeq ($(shell uname), Darwin)
 else
   SED_INPLACE = sed -i
 endif
+
+THEMES_DIR := themes
+DOWNLOADS_DIR := downloads
+
+.PHONY: up down download package
+
+
+# Interactive download of a site into $(DOWNLOADS_DIR)
+download:
+		@read -p "Site URL: " URL; \
+		read -p "Folder name: " NAME; \
+		mkdir -p $(DOWNLOADS_DIR)/$$NAME; \
+		python -m enriscador_web.main download $$URL $(DOWNLOADS_DIR)/$$NAME
+
+# Package all downloads in $(DOWNLOADS_DIR) into themes under $(THEMES_DIR)
+package:
+		@for d in $(DOWNLOADS_DIR)/*; do \
+		[ -d "$$d" ] || continue; \
+		domain_dir=$$(find "$$d" -mindepth 1 -maxdepth 1 -type d | head -n 1); \
+		[ -z "$$domain_dir" ] && continue; \
+		name=$$(basename "$$d"); \
+		out="$(THEMES_DIR)/$$name"; \
+		python -m enriscador_web.main package "$$domain_dir" "$$out" --theme-name "$$name"; \
+done
 
 
 # Check if Docker is running
@@ -70,85 +94,8 @@ test-verbose: start-if-not-running
 logs:
 	npx wp-env logs
 
-# Install PHP_CodeSniffer and WordPress Coding Standards in the container
-install-phpcs: up
-	@echo "Checking if PHP_CodeSniffer is installed..."
-	@if ! npx wp-env run cli bash -c '[ -x "$$HOME/.composer/vendor/bin/phpcs" ]' > /dev/null 2>&1; then \
-		echo "Installing PHP_CodeSniffer and WordPress Coding Standards..."; \
-		npx wp-env run cli composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true; \
-		npx wp-env run cli composer global require squizlabs/php_codesniffer wp-coding-standards/wpcs --no-interaction; \
-	else \
-		echo "PHP_CodeSniffer is already installed."; \
-	fi
-
-
-# Check code style with PHP Code Sniffer inside the container
-lint: install-phpcs
-	npx wp-env run cli phpcs --standard=wp-content/plugins/decker/.phpcs.xml.dist wp-content/plugins/decker
-
-# Automatically fix code style with PHP Code Beautifier inside the container
-fix: install-phpcs
-	npx wp-env run cli phpcbf --standard=wp-content/plugins/decker/.phpcs.xml.dist wp-content/plugins/decker
-
-# Run PHP Mess Detector ignoring vendor and node_modules
-phpmd:
-	phpmd . text cleancode,codesize,controversial,design,naming,unusedcode --exclude vendor,node_modules,tests
-
-# Finds the CLI container used by wp-env
-cli-container:
-	@docker ps --format "{{.Names}}" \
-	| grep "\-cli\-" \
-	| grep -v "tests-cli" \
-	|| ( \
-		echo "No main CLI container found. Please run 'make up' first." ; \
-		exit 1 \
-	)
-
-# Fix wihout tty for use on git hooks
-fix-no-tty: cli-container start-if-not-running
-	@CONTAINER_CLI=$$( \
-		docker ps --format "{{.Names}}" \
-		| grep "\-cli\-" \
-		| grep -v "tests-cli" \
-	) && \
-	echo "Running PHPCBF (no TTY) inside $$CONTAINER_CLI..." && \
-	docker exec -i $$CONTAINER_CLI \
-		phpcbf --standard=wp-content/plugins/decker/.phpcs.xml.dist wp-content/plugins/decker
-
-# Lint wihout tty for use on git hooks
-lint-no-tty: cli-container start-if-not-running
-	@CONTAINER_CLI=$$( \
-		docker ps --format "{{.Names}}" \
-		| grep "\-cli\-" \
-		| grep -v "tests-cli" \
-	) && \
-	echo "Running PHPCS (no TTY) inside $$CONTAINER_CLI..." && \
-	docker exec -i $$CONTAINER_CLI \
-		phpcs --standard=wp-content/plugins/decker/.phpcs.xml.dist wp-content/plugins/decker
-
-
-# Update Composer dependencies
-update: check-docker
-	composer update --no-cache --with-all-dependencies
-
-# Generate a .pot file for translations
-pot:
-	composer make-pot
-
-# Update .po files from .pot file
-po:
-	composer update-po
-
-# Generate .mo files from .po files
-mo:
-	composer make-mo
-
-# Check the untranslated strings
-check-untranslated:
-	composer check-untranslated
-
 # Generate the decker-X.X.X.zip package
-package:
+package2:
 	@if [ -z "$(VERSION)" ]; then \
 		echo "Error: No se ha especificado una versión. Usa 'make package VERSION=1.2.3'"; \
 		exit 1; \
@@ -192,3 +139,4 @@ help:
 
 # Set help as the default target if no target is specified
 .DEFAULT_GOAL := help
+

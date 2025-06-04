@@ -1,2 +1,5 @@
 __pycache__/
+
+downloads/
+themes/*.zip
 env/
