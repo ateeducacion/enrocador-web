@@ -5,7 +5,7 @@
 
 THEMES_DIR := downloads
 
-.PHONY: help up down download package clean destroy check-plugin install
+.PHONY: help up down activate download package clean destroy check-plugin install
 VENV_DIR ?= env
 
 # Show available targets
@@ -14,6 +14,7 @@ help:
 	@echo "  help            Show this help message"
 	@echo "  up              Start the local WordPress environment using wp-env"
 	@echo "  down            Stop the environment"
+	@echo "  activate        Activate the virtual environment"
 	@echo "  download        Interactive download of a site into $(THEMES_DIR)"
 	@echo "  package         Create zip archives from each theme in $(THEMES_DIR)"
 	@echo "  clean           Remove wp-env environments"
@@ -29,15 +30,23 @@ up:
 down:
 	npx wp-env stop
 
+# Activate the virtual environment
+activate:
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+	echo "Run this command manually in your shell: $(VENV_DIR)\Scripts\activate"; \
+	else \
+	echo "Run this command manually in your shell: source $(VENV_DIR)/bin/activate"; \
+	fi
+
 # Interactive download of a site into $(THEMES_DIR)
-download:
+download: activate
 	@read -p "Site URL: " URL; \
 	read -p "Folder name: " NAME; \
 	mkdir -p $(THEMES_DIR)/$$NAME; \
 	python -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
 
 # Package all themes in $(THEMES_DIR) into zip files
-package:
+package: activate
 	@for d in $(THEMES_DIR)/*; do \
 	[ -d "$$d" ] || continue; \
 	python -m enriscador_web.main package "$$d" --output "$$d.zip"; \
