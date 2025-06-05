@@ -14,7 +14,7 @@ help:
 	@echo "  help            Show this help message"
 	@echo "  up              Start the local WordPress environment using wp-env"
 	@echo "  down            Stop the environment"
-	@echo "  activate        Activate the virtual environment"
+	@echo "  check-venv      Check if virtualenv is active (prints red/green warning)"
 	@echo "  download        Interactive download of a site into $(THEMES_DIR)"
 	@echo "  package         Create zip archives from each theme in $(THEMES_DIR)"
 	@echo "  clean           Remove wp-env environments"
@@ -30,26 +30,27 @@ up:
 down:
 	npx wp-env stop
 
-# Activate the virtual environment
-activate:
-	@if [ "$(OS)" = "Windows_NT" ]; then \
-		$(VENV_DIR)\Scripts\activate; \
-	else \
-		. $(VENV_DIR)/bin/activate; \
-	fi
+# Comprueba si estamos dentro del virtualenv; imprime en rojo si no y en verde si sí.
+check-venv:
+	@ if [ -z "$$VIRTUAL_ENV" ]; then \
+	    printf "\033[0;31m[ERROR] Virtualenv no detectado. Actívalo con:\n    source $(VENV_DIR)/bin/activate\033[0m\n"; \
+	    exit 1; \
+	  else \
+	    printf "\033[0;32m[OK] Virtualenv activo en: $$VIRTUAL_ENV\033[0m\n"; \
+	  fi
 
 # Interactive download of a site into $(THEMES_DIR)
-download: activate
+download: check-venv
 	@read -p "Site URL: " URL; \
 	read -p "Folder name: " NAME; \
 	mkdir -p $(THEMES_DIR)/$$NAME; \
-	python3 -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
+	python -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
 
 # Package all themes in $(THEMES_DIR) into zip files
-package: activate
+package: check-venv
 	@for d in $(THEMES_DIR)/*; do \
 	[ -d "$$d" ] || continue; \
-	python3 -m enriscador_web.main package "$$d" --output "$$d.zip"; \
+	python -m enriscador_web.main package "$$d" --output "$$d.zip"; \
 	done
 
 # Clean the environments, the same as running "npx wp-env clean all"
@@ -75,6 +76,6 @@ install:
 	py -3.12 -m venv $(VENV_DIR) || py -3 -m venv $(VENV_DIR); \
 	$(VENV_DIR)\\Scripts\\pip install -r requirements.txt; \
 	else \
-	python3.12 -m venv $(VENV_DIR) || python3 -m venv $(VENV_DIR); \
+	python3 -m venv $(VENV_DIR); \
 	$(VENV_DIR)/bin/pip install -r requirements.txt; \
 	fi
