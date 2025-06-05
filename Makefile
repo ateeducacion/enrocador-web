@@ -25,6 +25,16 @@ help:
 # Start the local WordPress environment using wp-env
 up:
 	npx wp-env start
+	# Enable all themes in $(THEMES_DIR) on the network using WP-CLI inside the wp-env container
+	@for d in $(THEMES_DIR)/*; do \
+	  [ -d "$$d" ] || continue; \
+	  slug=$$(basename $$d); \
+	  printf "Enabling theme '$$slug' on the network...\n"; \
+	  npx wp-env run cli wp theme enable $$slug --network || exit 1; \
+	done
+	@printf "\033[0;32mAll themes in '$(THEMES_DIR)' have been network-enabled.\033[0m\n"
+
+
 
 # Stop the environment
 down:
