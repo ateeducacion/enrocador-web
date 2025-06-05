@@ -130,7 +130,7 @@ def capture_screenshot(url, theme_dir):
     try:
         output_dir = Path(theme_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        hti = Html2Image(output_path=str(output_dir))
+        hti = Html2Image(output_path=str(output_dir), disable_logging=True)
         hti.screenshot(url=url, save_as="screenshot.png")
     except Exception as e:
         print(f"Could not capture screenshot: {e}")
