@@ -43,13 +43,13 @@ download: activate
 	@read -p "Site URL: " URL; \
 	read -p "Folder name: " NAME; \
 	mkdir -p $(THEMES_DIR)/$$NAME; \
-	python -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
+	python3 -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
 
 # Package all themes in $(THEMES_DIR) into zip files
 package: activate
 	@for d in $(THEMES_DIR)/*; do \
 	[ -d "$$d" ] || continue; \
-	python -m enriscador_web.main package "$$d" --output "$$d.zip"; \
+	python3 -m enriscador_web.main package "$$d" --output "$$d.zip"; \
 	done
 
 # Clean the environments, the same as running "npx wp-env clean all"
@@ -75,6 +75,6 @@ install:
 	py -3.12 -m venv $(VENV_DIR) || py -3 -m venv $(VENV_DIR); \
 	$(VENV_DIR)\\Scripts\\pip install -r requirements.txt; \
 	else \
-	python3 -m venv $(VENV_DIR); \
+	python3.12 -m venv $(VENV_DIR) || python3 -m venv $(VENV_DIR); \
 	$(VENV_DIR)/bin/pip install -r requirements.txt; \
 	fi
