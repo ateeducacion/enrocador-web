@@ -33,9 +33,9 @@ down:
 # Activate the virtual environment
 activate:
 	@if [ "$(OS)" = "Windows_NT" ]; then \
-	echo "Run this command manually in your shell: $(VENV_DIR)\Scripts\activate"; \
+		$(VENV_DIR)\Scripts\activate; \
 	else \
-	echo "Run this command manually in your shell: source $(VENV_DIR)/bin/activate"; \
+		. $(VENV_DIR)/bin/activate; \
 	fi
 
 # Interactive download of a site into $(THEMES_DIR)
