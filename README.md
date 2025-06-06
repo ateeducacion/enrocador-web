@@ -1,4 +1,4 @@
-# Enriscador Web
+# Enrocador Web
 
 Herramienta para convertir un sitio web en un tema de WordPress estático.
 
@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 ## Uso básico
 
-Enriscador Web se organiza en dos subcomandos. Si no se especifica ninguno,
+Enrocador Web se organiza en dos subcomandos. Si no se especifica ninguno,
 se asume `download` por defecto. El sitio descargado se guarda dentro de una
 carpeta `static` y en la raíz se copian los ficheros mínimos de un tema de
 WordPress (`index.php`, `style.css` y `functions.php`). El `index.php`
@@ -38,9 +38,9 @@ consola para indicar que el proceso sigue en curso.
 ### Descargar un sitio
 
 ```bash
-python -m enriscador_web.main download <url> <carpeta_destino> [opciones]
+python -m enrocador_web.main download <url> <carpeta_destino> [opciones]
 # O bien, simplemente
-python -m enriscador_web.main <url> <carpeta_destino> [opciones]
+python -m enrocador_web.main <url> <carpeta_destino> [opciones]
 ```
 
 Opciones de descarga:
@@ -54,7 +54,7 @@ Opciones de descarga:
 ### Empaquetar la carpeta descargada
 
 ```bash
-python -m enriscador_web.main package <carpeta_descarga> [--output paquete.zip]
+python -m enrocador_web.main package <carpeta_descarga> [--output paquete.zip]
 ```
 
 El comando `package` solo comprime la carpeta indicada en un archivo ZIP. Se generará `paquete.zip` en la misma ruta si no se especifica `--output`.
@@ -63,10 +63,10 @@ Ejemplo completo:
 
 ```bash
 # Descargar el sitio (equivalente a usar el subcomando `download`)
-python -m enriscador_web.main https://ejemplo.com downloads/archivado --theme-name MiTema --depth 1
+python -m enrocador_web.main https://ejemplo.com downloads/archivado --theme-name MiTema --depth 1
 
 # Comprimir para distribuir
-python -m enriscador_web.main package downloads/archivado --output downloads/archivado.zip
+python -m enrocador_web.main package downloads/archivado --output downloads/archivado.zip
 ```
 
 ## Uso con Makefile
