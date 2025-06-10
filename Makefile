@@ -1,4 +1,4 @@
-						# Simplified Makefile for Enriscador Web
+						# Simplified Makefile for enrocador Web
 
 # Default target shows the list of available commands
 .DEFAULT_GOAL := help
@@ -54,13 +54,13 @@ download: check-venv
 	@read -p "Site URL: " URL; \
 	read -p "Folder name: " NAME; \
 	mkdir -p $(THEMES_DIR)/$$NAME; \
-	python -m enriscador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
+	python -m enrocador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
 
 # Package all themes in $(THEMES_DIR) into zip files
 package: check-venv
 	@for d in $(THEMES_DIR)/*; do \
 	[ -d "$$d" ] || continue; \
-	python -m enriscador_web.main package "$$d" --output "$$d.zip"; \
+	python -m enrocador_web.main package "$$d" --output "$$d.zip"; \
 	done
 
 # Clean the environments, the same as running "npx wp-env clean all"
