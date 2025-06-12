@@ -38,33 +38,60 @@ function enrocador_filter_static_html($html) {
 
 /**
  * Serve static assets stored in the theme's `static` folder.
- *
- * Requests to paths like `/style.css` or `/images/foo.png` will be
- * resolved against the downloaded site without modifying the HTML.
- * Runs on `template_redirect` so WordPress routing is already set up.
+ * Includes protections against spam URL parameters, path traversal, and unsafe file types.
  */
 function enrocador_static_router() {
     if (is_admin()) {
         return;
     }
 
-    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    $path = ltrim($path, '/');
+    // --- PROTECT AGAINST MALICIOUS QUERY PARAMETERS ---
+    $path_clean = strtok($_SERVER['REQUEST_URI'], '?');
+    $query_string = $_SERVER['QUERY_STRING'] ?? '';
 
+    if ($query_string !== '') {
+        header('Location: ' . $path_clean, true, 301);
+        exit();
+    }
+
+    $path = ltrim($path_clean, '/');
     if ($path === '') {
-        // Home page is handled by index.php
         return;
     }
 
-    $file = get_stylesheet_directory() . '/static/' . $path;
-    if (!is_file($file)) {
-        $index = rtrim($file, '/') . '/index.html';
-        if (is_file($index)) {
-            $file = $index;
-        }
+    // --- PATH TRAVERSAL PROTECTION ---
+    $static_dir = get_stylesheet_directory() . '/static/';
+    $requested_file = $static_dir . $path;
+
+    $base_path = realpath($static_dir);
+    $real_file_path = realpath($requested_file);
+
+    if ($real_file_path === false || strpos($real_file_path, $base_path) !== 0) {
+        status_header(404);
+        return;
     }
-    if (is_file($file)) {
-        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+    // --- FILE EXTENSION SAFELIST (ALLOW ONLY THESE TYPES) ---
+    $allowed_extensions = array(
+        'html', 'htm', 'css', 'js',
+        'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg',
+        'woff', 'woff2', 'ttf', 'eot', 'otf',
+        'mp4', 'webm', 'ogg',
+        'pdf', 'zip', 'rar', 'tar', 'gz', '7z',
+        'json', 'xml'
+    );
+
+    $ext = strtolower(pathinfo($real_file_path, PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $allowed_extensions)) {
+        // Block any disallowed file types
+        status_header(403);
+        echo 'Forbidden';
+        exit;
+    }
+
+    // --- FILE SERVING LOGIC ---
+    if (is_file($real_file_path)) {
         $types = wp_get_mime_types();
         if (isset($types[$ext]) && !headers_sent()) {
             $type = $types[$ext];
@@ -73,14 +100,14 @@ function enrocador_static_router() {
             }
             header('Content-Type: ' . $type);
         }
+
         if (in_array($ext, array('html', 'htm'))) {
-            echo enrocador_filter_static_html(file_get_contents($file));
+            echo enrocador_filter_static_html(file_get_contents($real_file_path));
         } else {
-            readfile($file);
+            readfile($real_file_path);
         }
         exit;
     }
 }
-add_action('template_redirect', 'enrocador_static_router', 0);
 
-?>
+add_action('template_redirect', 'enrocador_static_router', 0);
