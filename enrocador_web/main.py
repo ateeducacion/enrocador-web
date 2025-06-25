@@ -93,7 +93,17 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
             candidate = src_root.joinpath(*parts)
             if candidate.exists():
                 source = candidate
-        for item in source.iterdir():
+        try:
+            entries = list(source.iterdir())
+        except UnicodeDecodeError:
+            entries = []
+            for name in os.listdir(os.fsencode(str(source))):
+                try:
+                    decoded = os.fsdecode(name)
+                except Exception:
+                    continue
+                entries.append(Path(source) / decoded)
+        for item in entries:
             target = static_dir / item.name
             if target.exists():
                 if item.is_dir():
@@ -128,7 +138,10 @@ def copy_template_files(theme_dir, theme_name, url=""):
 def convert_html_to_utf8(root_dir):
     """Re-encode all HTML files inside ``root_dir`` to UTF-8."""
     for path in Path(root_dir).rglob('*.htm*'):
-        data = path.read_bytes()
+        try:
+            data = path.read_bytes()
+        except (UnicodeDecodeError, OSError):
+            continue
         for enc in ('utf-8', 'latin-1'):
             try:
                 text = data.decode(enc)
@@ -137,7 +150,10 @@ def convert_html_to_utf8(root_dir):
                 continue
         else:
             text = data.decode('utf-8', errors='replace')
-        path.write_text(text, encoding='utf-8')
+        try:
+            path.write_text(text, encoding='utf-8')
+        except (UnicodeDecodeError, OSError):
+            continue
 
 
 def strip_index_from_urls(root_dir):
@@ -145,7 +161,10 @@ def strip_index_from_urls(root_dir):
     import re
     pattern = re.compile(r'(href|src)=(\"|\')(.*?)/?index\.html(?=[\"\'])', re.IGNORECASE)
     for path in Path(root_dir).rglob('*.htm*'):
-        text = path.read_text(encoding='utf-8')
+        try:
+            text = path.read_text(encoding='utf-8')
+        except (UnicodeDecodeError, OSError):
+            continue
 
         def repl(match):
             url = match.group(3)
@@ -157,7 +176,10 @@ def strip_index_from_urls(root_dir):
 
         new_text = pattern.sub(repl, text)
         if new_text != text:
-            path.write_text(new_text, encoding='utf-8')
+            try:
+                path.write_text(new_text, encoding='utf-8')
+            except (UnicodeDecodeError, OSError):
+                pass
 
 
 def capture_screenshot(url, theme_dir):
