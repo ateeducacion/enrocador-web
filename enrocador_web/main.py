@@ -15,6 +15,14 @@ if sys.getfilesystemencoding().lower() == "ascii":
         locale.setlocale(locale.LC_ALL, "C.UTF-8")
     except locale.Error:
         pass
+    try:
+        if not hasattr(sys, "setdefaultencoding"):
+            import importlib
+            importlib.reload(sys)
+        if hasattr(sys, "setdefaultencoding"):
+            sys.setdefaultencoding("utf-8")
+    except Exception:
+        pass
 
 from pathlib import Path
 from urllib.parse import urlparse
@@ -108,8 +116,13 @@ def safe_rglob(root: Path, pattern: str) -> Iterable[Path]:
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
-    dest_dir = Path(dest_dir).resolve()
-    dest_dir = dest_dir.parent / sanitize_folder_name(dest_dir.name)
+    orig = Path(dest_dir).resolve()
+    dest_dir = orig.parent / sanitize_folder_name(orig.name)
+    if dest_dir != orig and orig.exists() and not dest_dir.exists():
+        try:
+            orig.rename(dest_dir)
+        except OSError:
+            pass
     static_dir = dest_dir / "static"
     static_dir.mkdir(parents=True, exist_ok=True)
 

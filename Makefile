@@ -51,10 +51,9 @@ check-venv:
 
 # Interactive download of a site into $(THEMES_DIR)
 download: check-venv
-	@read -p "Site URL: " URL; \
-	read -p "Folder name: " NAME; \
-	mkdir -p $(THEMES_DIR)/$$NAME; \
-	python -m enrocador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
+        @read -p "Site URL: " URL; \
+        read -p "Folder name: " NAME; \
+        python -m enrocador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
 
 # Package all themes in $(THEMES_DIR) into zip files
 package: check-venv

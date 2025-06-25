@@ -51,7 +51,8 @@ Opciones de descarga:
 - `--theme-name` Nombre del tema generado.
 - `--sanitize` opcional para sanear nombres de archivos (actualmente sin efecto con `pywebcopy`).
   Además la carpeta destino se normaliza a minúsculas y sin caracteres no permitidos.
-  El programa intenta ajustar la locale a UTF‑8 si el sistema usa ASCII para evitar fallos de codificación.
+  Si ya existe con otro nombre solo variado en mayúsculas/minúsculas se renombra automáticamente.
+  El programa intenta ajustar la locale a UTF‑8 y fuerza `sys.setdefaultencoding('utf-8')` si el sistema usa ASCII para evitar fallos de codificación.
 
 ### Empaquetar la carpeta descargada
 
