@@ -10,9 +10,44 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from pywebcopy import configs
-from html2image import Html2Image
 import threading
 import time
+
+
+def _patch_html2image_py38():
+    """Modify html2image for Python 3.8 compatibility if needed."""
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.find_spec("html2image")
+    if not spec or not spec.origin:
+        return
+
+    path = Path(spec.origin)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return
+
+    if "list[str]" not in text:
+        return
+
+    if "from typing import List" not in text:
+        lines = text.splitlines()
+        for i, line in enumerate(lines):
+            if line.startswith("import") or line.startswith("from"):
+                last_import = i
+        lines.insert(last_import + 1, "from typing import List")
+        text = "\n".join(lines)
+
+    text = text.replace("list[str]", "List[str]")
+    try:
+        path.write_text(text, encoding="utf-8")
+    except OSError:
+        return
+    import importlib
+    importlib.invalidate_caches()
+    importlib.reload(importlib.import_module("html2image"))
 
 
 def _spinner(message, stop_event):
@@ -127,13 +162,20 @@ def strip_index_from_urls(root_dir):
 
 def capture_screenshot(url, theme_dir):
     """Generate ``screenshot.png`` for the theme using html2image."""
+    output_dir = Path(theme_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     try:
-        output_dir = Path(theme_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        _patch_html2image_py38()
+        from html2image import Html2Image
         hti = Html2Image(output_path=str(output_dir), disable_logging=True)
         hti.screenshot(url=url, save_as="screenshot.png")
     except Exception as e:
         print(f"Could not capture screenshot: {e}")
+        fallback = Path(__file__).parent / "theme_template" / "screenshot.png"
+        try:
+            shutil.copy(fallback, output_dir / "screenshot.png")
+        except Exception as copy_error:
+            print(f"Could not copy fallback screenshot: {copy_error}")
 
 
 def parse_args(argv=None):
