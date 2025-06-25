@@ -79,7 +79,10 @@ Para facilitar el flujo de trabajo se incluye un `Makefile` sencillo.
 - `make` o `make help` muestra las opciones disponibles.
 Al ejecutar `make` sin argumentos se mostrará esta misma ayuda.
 
-- `make download` descarga un sitio de forma interactiva en la carpeta `downloads`.
+- `make download` descarga un sitio en la carpeta `downloads`. Por defecto
+  pregunta la URL y el nombre de la carpeta, pero puedes pasarlos en las
+  variables `URL` y `NAME` para evitar la interacción, por ejemplo:
+  `make download URL=https://ejemplo.com NAME=miweb`.
 - `make package` comprime cada carpeta de `downloads` en un archivo `.zip` con el mismo nombre.
 - `make up` y `make down` inician y detienen un entorno local de WordPress usando `wp-env`.
 - `make clean` elimina los entornos generados por `wp-env`.
