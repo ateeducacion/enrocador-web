@@ -52,10 +52,10 @@ check-venv:
 
 # Interactive download of a site into $(THEMES_DIR)
 download: check-venv
-        @URL_INPUT="$(URL)"; NAME_INPUT="$(NAME)"; \
-        if [ -z "$$URL_INPUT" ]; then read -p "Site URL: " URL_INPUT; fi; \
-        if [ -z "$$NAME_INPUT" ]; then read -p "Folder name: " NAME_INPUT; fi; \
-        python -m enrocador_web.main download $$URL_INPUT $(THEMES_DIR)/$$NAME_INPUT --theme-name $$NAME_INPUT
+	@URL_INPUT="$(URL)"; NAME_INPUT="$(NAME)"; \
+	if [ -z "$$URL_INPUT" ]; then read -p "Site URL: " URL_INPUT; fi; \
+	if [ -z "$$NAME_INPUT" ]; then read -p "Folder name: " NAME_INPUT; fi; \
+	python -m enrocador_web.main download $$URL_INPUT $(THEMES_DIR)/$$NAME_INPUT --theme-name $$NAME_INPUT
 
 # Package all themes in $(THEMES_DIR) into zip files
 package: check-venv
