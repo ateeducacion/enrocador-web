@@ -33,7 +33,8 @@ import time
 
 
 def _patch_html2image_py38():
-    """Modify html2image for Python 3.8 compatibility if needed."""
+    """Modify html2image for Python 3.8 compatibility if installed."""
+    import importlib
     import importlib.util
     from pathlib import Path
 
@@ -41,31 +42,40 @@ def _patch_html2image_py38():
     if not spec or not spec.origin:
         return
 
-    path = Path(spec.origin)
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError:
-        return
+    pkg_dir = Path(spec.origin).resolve().parent
+    candidates = [Path(spec.origin), pkg_dir / "html2image.py"]
+    changed = False
 
-    if "list[str]" not in text:
-        return
+    for path in candidates:
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
 
-    if "from typing import List" not in text:
-        lines = text.splitlines()
-        for i, line in enumerate(lines):
-            if line.startswith("import") or line.startswith("from"):
-                last_import = i
-        lines.insert(last_import + 1, "from typing import List")
-        text = "\n".join(lines)
+        if "list[str]" not in text:
+            continue
 
-    text = text.replace("list[str]", "List[str]")
-    try:
-        path.write_text(text, encoding="utf-8")
-    except OSError:
-        return
-    import importlib
-    importlib.invalidate_caches()
-    importlib.reload(importlib.import_module("html2image"))
+        if "from typing import List" not in text:
+            lines = text.splitlines()
+            last_import = 0
+            for i, line in enumerate(lines):
+                if line.startswith("import") or line.startswith("from"):
+                    last_import = i
+            lines.insert(last_import + 1, "from typing import List")
+            text = "\n".join(lines)
+
+        text = text.replace("list[str]", "List[str]")
+        try:
+            path.write_text(text, encoding="utf-8")
+            changed = True
+        except OSError:
+            continue
+
+    if changed:
+        importlib.invalidate_caches()
+        importlib.reload(importlib.import_module("html2image"))
 
 
 def _spinner(message, stop_event):
