@@ -5,6 +5,7 @@
 
 THEMES_DIR := downloads
 
+SHELL := bash
 .PHONY: help up down activate download package clean destroy check-plugin install
 VENV_DIR ?= env
 
@@ -51,10 +52,10 @@ check-venv:
 
 # Interactive download of a site into $(THEMES_DIR)
 download: check-venv
-	@read -p "Site URL: " URL; \
-	read -p "Folder name: " NAME; \
-	mkdir -p $(THEMES_DIR)/$$NAME; \
-	python -m enrocador_web.main download $$URL $(THEMES_DIR)/$$NAME --theme-name $$NAME
+	@URL_INPUT="$(URL)"; NAME_INPUT="$(NAME)"; \
+	if [ -z "$$URL_INPUT" ]; then read -p "Site URL: " URL_INPUT; fi; \
+	if [ -z "$$NAME_INPUT" ]; then read -p "Folder name: " NAME_INPUT; fi; \
+	python -m enrocador_web.main download $$URL_INPUT $(THEMES_DIR)/$$NAME_INPUT --theme-name $$NAME_INPUT
 
 # Package all themes in $(THEMES_DIR) into zip files
 package: check-venv
@@ -89,3 +90,4 @@ install:
 	python3 -m venv $(VENV_DIR); \
 	$(VENV_DIR)/bin/pip install -r requirements.txt; \
 	fi
+
