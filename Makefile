@@ -5,6 +5,7 @@
 
 THEMES_DIR := downloads
 
+SHELL := bash
 .PHONY: help up down activate download package clean destroy check-plugin install
 VENV_DIR ?= env
 
@@ -88,3 +89,4 @@ install:
 	python3 -m venv $(VENV_DIR); \
 	$(VENV_DIR)/bin/pip install -r requirements.txt; \
 	fi
+
