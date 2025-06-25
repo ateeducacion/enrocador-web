@@ -4,3 +4,4 @@ downloads/*.zip
 env/
 downloads
 .aider*
+.DS_Store
