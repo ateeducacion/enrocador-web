@@ -117,10 +117,10 @@ def copy_template_files(theme_dir, theme_name, url=""):
         src = template_dir / fname
         dst = theme_dir / fname
         if fname == "style.css":
-            text = src.read_text()
+            text = src.read_text(encoding="utf-8")
             text = text.replace("{{THEME_NAME}}", theme_name)
             text = text.replace("{{URL}}", url)
-            dst.write_text(text)
+            dst.write_text(text, encoding="utf-8")
         else:
             shutil.copy(src, dst)
 
