@@ -49,8 +49,9 @@ Opciones de descarga:
 - `--depth` Profundidad máxima de crawling.
 - `--exclude` Lista de dominios a excluir.
 - `--theme-name` Nombre del tema generado.
-- `--sanitize` opcional para sanear nombres de archivos (actualmente sin efecto con `pywebcopy`).  
+- `--sanitize` opcional para sanear nombres de archivos (actualmente sin efecto con `pywebcopy`).
   Además la carpeta destino se normaliza a minúsculas y sin caracteres no permitidos.
+  El programa intenta ajustar la locale a UTF‑8 si el sistema usa ASCII para evitar fallos de codificación.
 
 ### Empaquetar la carpeta descargada
 

@@ -3,9 +3,18 @@ import os
 import re
 import shutil
 import sys
+import locale
+from typing import Iterable
 
 if not (3, 8) <= sys.version_info < (3, 13):
     sys.exit("ERROR: enrocador Web requires Python >=3.8 and <3.13")
+
+# Ensure UTF-8 locale so file operations don't fail on systems with ASCII locale
+if sys.getfilesystemencoding().lower() == "ascii":
+    try:
+        locale.setlocale(locale.LC_ALL, "C.UTF-8")
+    except locale.Error:
+        pass
 
 from pathlib import Path
 from urllib.parse import urlparse
@@ -70,6 +79,33 @@ def sanitize_folder_name(name: str) -> str:
     name = re.sub(r"[^a-z0-9._-]", "", name)
     return name or "theme"
 
+
+def safe_listdir(path: Path) -> Iterable[Path]:
+    """List directory entries even on systems with non-UTF8 locales."""
+    try:
+        return list(path.iterdir())
+    except UnicodeDecodeError:
+        entries = []
+        for name in os.listdir(os.fsencode(str(path))):
+            try:
+                decoded = os.fsdecode(name)
+            except Exception:
+                continue
+            entries.append(path / decoded)
+        return entries
+
+
+def safe_rglob(root: Path, pattern: str) -> Iterable[Path]:
+    """Yield files matching pattern without decoding errors."""
+    import fnmatch
+    root_b = os.fsencode(str(root))
+    for dirpath_b, dirnames_b, filenames_b in os.walk(root_b):
+        dirpath = Path(os.fsdecode(dirpath_b))
+        for fname_b in filenames_b:
+            name = os.fsdecode(fname_b)
+            if fnmatch.fnmatch(name, pattern):
+                yield dirpath / name
+
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
     dest_dir = Path(dest_dir).resolve()
@@ -104,16 +140,7 @@ def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sani
             candidate = src_root.joinpath(*parts)
             if candidate.exists():
                 source = candidate
-        try:
-            entries = list(source.iterdir())
-        except UnicodeDecodeError:
-            entries = []
-            for name in os.listdir(os.fsencode(str(source))):
-                try:
-                    decoded = os.fsdecode(name)
-                except Exception:
-                    continue
-                entries.append(Path(source) / decoded)
+        entries = safe_listdir(source)
         for item in entries:
             target = static_dir / item.name
             if target.exists():
@@ -148,7 +175,7 @@ def copy_template_files(theme_dir, theme_name, url=""):
 
 def convert_html_to_utf8(root_dir):
     """Re-encode all HTML files inside ``root_dir`` to UTF-8."""
-    for path in Path(root_dir).rglob('*.htm*'):
+    for path in safe_rglob(Path(root_dir), '*.htm*'):
         try:
             data = path.read_bytes()
         except (UnicodeDecodeError, OSError):
@@ -171,7 +198,7 @@ def strip_index_from_urls(root_dir):
     """Remove 'index.html' from href/src attributes in HTML files."""
     import re
     pattern = re.compile(r'(href|src)=(\"|\')(.*?)/?index\.html(?=[\"\'])', re.IGNORECASE)
-    for path in Path(root_dir).rglob('*.htm*'):
+    for path in safe_rglob(Path(root_dir), '*.htm*'):
         try:
             text = path.read_text(encoding='utf-8')
         except (UnicodeDecodeError, OSError):
