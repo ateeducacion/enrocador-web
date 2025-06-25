@@ -5,7 +5,9 @@ Herramienta para convertir un sitio web en un tema de WordPress estático.
 ## Requisitos
 
 - Python 3.8+
-- Las librerías `pywebcopy` y `html2image` incluidas en `requirements.txt`
+- Las librerías `pywebcopy` y `html2image` incluidas en `requirements.txt` \
+  (se parchean automáticamente para soportar Python 3.8 y evitar errores de
+  codificación)
 
 Crea un entorno virtual e instala las dependencias:
 
@@ -31,7 +33,8 @@ El router también envía la cabecera `charset=UTF-8` para evitar caracteres ext
 Durante la descarga los archivos HTML se recodifican a UTF-8 para que el texto
 se muestre correctamente sin importar el charset original.
 Además se crea automáticamente un `screenshot.png` usando la librería
-`html2image` para que WordPress muestre una vista previa del tema.
+`html2image` para que WordPress muestre una vista previa del tema. Si no es
+posible capturarla se copia la imagen por defecto incluida en `theme_template`.
 Mientras PyWebCopy trabaja se muestra un pequeño mensaje "Descargando..." en la
 consola para indicar que el proceso sigue en curso.
 
@@ -53,6 +56,8 @@ Opciones de descarga:
   Además la carpeta destino se normaliza a minúsculas y sin caracteres no permitidos.
   Si ya existe con otro nombre solo variado en mayúsculas/minúsculas se renombra automáticamente.
   El programa intenta ajustar la locale a UTF‑8 y fuerza `sys.setdefaultencoding('utf-8')` si el sistema usa ASCII para evitar fallos de codificación.
+  También se modifica `pywebcopy` en tiempo de ejecución para tolerar fallos de
+  decodificación que de otro modo interrumpirían la descarga.
 
 ### Empaquetar la carpeta descargada
 

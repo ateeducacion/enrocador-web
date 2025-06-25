@@ -78,6 +78,51 @@ def _patch_html2image_py38():
         importlib.reload(importlib.import_module("html2image"))
 
 
+def _patch_pywebcopy_unicode():
+    """Relax pywebcopy decoding to avoid ASCII errors."""
+    import importlib
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.find_spec("pywebcopy")
+    if not spec or not spec.origin:
+        return
+    pkg_dir = Path(spec.origin).resolve().parent
+    elements = pkg_dir / "elements.py"
+    urls = pkg_dir / "urls.py"
+    changed = False
+
+    if elements.exists():
+        try:
+            text = elements.read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+        new_text = text.replace(".decode(encoding)", ".decode(encoding, errors='ignore')")
+        if new_text != text:
+            try:
+                elements.write_text(new_text, encoding="utf-8")
+                changed = True
+            except OSError:
+                pass
+
+    if urls.exists():
+        try:
+            text = urls.read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+        if "_implicit_encoding = 'ascii'" in text:
+            text = text.replace("_implicit_encoding = 'ascii'", "_implicit_encoding = 'utf-8'")
+            try:
+                urls.write_text(text, encoding="utf-8")
+                changed = True
+            except OSError:
+                pass
+
+    if changed:
+        importlib.invalidate_caches()
+        importlib.reload(importlib.import_module("pywebcopy.urls"))
+        importlib.reload(importlib.import_module("pywebcopy.elements"))
+
+
 def _spinner(message, stop_event):
     """Simple CLI spinner shown while stop_event isn't set."""
     chars = ['|', '/', '-', '\\']
@@ -126,6 +171,7 @@ def safe_rglob(root: Path, pattern: str) -> Iterable[Path]:
 
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
+    _patch_pywebcopy_unicode()
     orig = Path(dest_dir).resolve()
     dest_dir = orig.parent / sanitize_folder_name(orig.name)
     if dest_dir != orig and orig.exists() and not dest_dir.exists():
