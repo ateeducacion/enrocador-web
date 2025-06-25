@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import shutil
 import sys
 
@@ -60,9 +61,19 @@ def _spinner(message, stop_event):
         idx += 1
     print(f"\r{message} listo.      ")
 
+
+def sanitize_folder_name(name: str) -> str:
+    """Return a safe folder name (lowercase, trimmed, no invalid chars)."""
+    name = name.strip().lower()
+    name = re.sub(r"\s+", "_", name)
+    name = re.sub(r"[\\/:*?\"<>|]", "", name)
+    name = re.sub(r"[^a-z0-9._-]", "", name)
+    return name or "theme"
+
 def download_site(url, dest_dir, user_agent=None, depth=None, exclude=None, sanitize=False, theme_name=None):
     """Download site using pywebcopy and generate theme files."""
     dest_dir = Path(dest_dir).resolve()
+    dest_dir = dest_dir.parent / sanitize_folder_name(dest_dir.name)
     static_dir = dest_dir / "static"
     static_dir.mkdir(parents=True, exist_ok=True)
 
@@ -240,14 +251,23 @@ def main(argv=None):
 
     if args.command == "download":
         try:
+            out_path = Path(args.output)
+            out_path = out_path.parent / sanitize_folder_name(out_path.name)
+
+            theme = args.theme_name
+            if theme is None:
+                theme = sanitize_folder_name(out_path.name)
+            else:
+                theme = sanitize_folder_name(theme)
+
             download_site(
                 args.url,
-                Path(args.output),
+                out_path,
                 args.user_agent,
                 args.depth,
                 args.exclude,
                 sanitize=args.sanitize,
-                theme_name=args.theme_name,
+                theme_name=theme,
             )
         except Exception as e:
             print("Error during download", e)
